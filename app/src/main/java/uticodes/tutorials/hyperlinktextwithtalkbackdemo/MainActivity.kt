@@ -74,7 +74,13 @@ fun LinkedText(
     linkedText: Map<String, String>,
     textStyle: TextStyle = TextStyle.Default,
 ) {
+    var openDialog by remember { mutableStateOf(false) }
     val uriHandler = LocalUriHandler.current
+
+    val termsText = linkedText.keys.first()
+    val privacyPolicyText = linkedText.keys.last()
+    val termsUrl = linkedText.getOrDefault(termsText, 0)
+    val privacyPolicyUrl = linkedText.getOrDefault(privacyPolicyText, 1)
 
     val annotatedString = buildAnnotatedString {
         append(description)
@@ -111,7 +117,66 @@ fun LinkedText(
                 }
         },
         modifier = modifier
+            .semantics {
+                customActions = listOf(
+                    CustomAccessibilityAction(
+                        label = "Continue to click on Google Terms and Privacy Policy",
+                        action = { openDialog = true; true }
+                    )
+                )
+            }
     )
+
+    if (openDialog) {
+
+        AlertDialog(
+            modifier = Modifier.padding(20.dp),
+            onDismissRequest = { openDialog = false },
+            title = {
+                Text(
+                    text = "Google $termsText and $privacyPolicyText",
+                    style = MaterialTheme.typography.h6
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = termsText,
+                        Modifier
+                            .clickable {
+                                uriHandler.openUri(termsUrl.toString())
+                            },
+                        color = Blue,
+                        style = MaterialTheme.typography.body1
+                    )
+
+                    Text(
+                        text = privacyPolicyText,
+                        Modifier
+                            .padding(
+                                top = 20.dp
+                            ).clickable {
+                            uriHandler.openUri(privacyPolicyUrl.toString())
+                        },
+                        color = Blue,
+                        style = MaterialTheme.typography.body1
+                    )
+
+                }
+
+            },
+            confirmButton = {
+                Text(
+                    text = "Close",
+                    style = MaterialTheme.typography.button,
+                    color = MaterialTheme.colors.primary,
+                    modifier = Modifier
+                        .padding(14.dp)
+                        .clickable { openDialog = false }
+                )
+            }
+        )
+    }
 }
 
 @Composable
