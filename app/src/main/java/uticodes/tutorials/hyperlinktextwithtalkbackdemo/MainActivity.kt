@@ -42,12 +42,76 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colors.background
                 ) {
 
-                    Greeting(name = "Android")
+                    Column(
+                        Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        val links = mutableMapOf(
+                            "Terms" to "https://policies.google.com/terms?hl=en-US",
+                            "Privacy Policy" to "https://policies.google.com/privacy?hl=en-US"
+                        )
+                        LinkedText(
+                            Modifier,
+                            description = "Continue to view Google Terms and Privacy Policy",
+                            linkedText = links,
+                            textStyle = TextStyle(textAlign = TextAlign.Center)
+                        )
+                    }
 
                 }
             }
         }
     }
+}
+
+const val TAG_URL = "URL"
+
+@Composable
+fun LinkedText(
+    modifier: Modifier = Modifier,
+    description: String,
+    linkedText: Map<String, String>,
+    textStyle: TextStyle = TextStyle.Default,
+) {
+    val uriHandler = LocalUriHandler.current
+
+    val annotatedString = buildAnnotatedString {
+        append(description)
+
+        for (key in linkedText.keys) {
+            val startIndex = description.indexOf(key, ignoreCase = true)
+            val endIndex = startIndex + key.length
+            addStyle(
+                SpanStyle(
+                    color = Blue,
+                    fontWeight = FontWeight.Medium,
+                    textDecoration = TextDecoration.Underline,
+                ),
+                startIndex,
+                endIndex
+            )
+
+            addStringAnnotation(
+                tag = TAG_URL,
+                annotation = linkedText[key].toString(),
+                start = startIndex,
+                end = endIndex
+            )
+        }
+    }
+
+    ClickableText(
+        text = annotatedString,
+        style = textStyle,
+        onClick = {
+            annotatedString.getStringAnnotations(TAG_URL, it, it)
+                .firstOrNull()?.let { stringAnnotations ->
+                    uriHandler.openUri(stringAnnotations.item)
+                }
+        },
+        modifier = modifier
+    )
 }
 
 @Composable
